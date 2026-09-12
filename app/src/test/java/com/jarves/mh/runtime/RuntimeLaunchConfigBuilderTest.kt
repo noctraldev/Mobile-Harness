@@ -28,6 +28,15 @@ class RuntimeLaunchConfigBuilderTest {
     }
 
     @Test
+    fun customBaseUrlWithVersionSuffixDoesNotDuplicateV1() {
+        val config = RuntimeLaunchConfigBuilder.build(
+            ProviderProfile(ProviderKind.CUSTOM, "https://api.b.ai/v1", "glm-5.3-flash", true),
+        )
+
+        assertEquals("https://api.b.ai", config.environment["ANTHROPIC_BASE_URL"])
+    }
+
+    @Test
     fun configuresEveryClaudeModelRoleAndInMemoryAuth() {
         val config = RuntimeLaunchConfigBuilder.build(
             ProviderProfile(ProviderKind.CUSTOM, "https://example.test/anthropic", "custom-model", true),

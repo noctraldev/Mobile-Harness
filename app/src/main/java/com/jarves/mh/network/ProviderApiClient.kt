@@ -119,7 +119,7 @@ class ProviderApiClient {
         }
 
     private fun modelEndpoints(baseUrl: String, protocol: ProviderProtocol): List<String> {
-        val base = baseUrl.trim().trimEnd('/')
+        val base = normalizedBaseUrl(baseUrl)
         val withoutAnthropic = base.removeSuffix("/anthropic")
         val candidates = when (protocol) {
             ProviderProtocol.OPENROUTER -> listOf("$base/v1/models")
@@ -130,7 +130,7 @@ class ProviderApiClient {
     }
 
     private fun messagesEndpoint(baseUrl: String, protocol: ProviderProtocol): String {
-        val base = baseUrl.trim().trimEnd('/')
+        val base = normalizedBaseUrl(baseUrl)
         return when (protocol) {
             ProviderProtocol.OPENROUTER -> "$base/v1/messages"
             ProviderProtocol.OPENAI_CHAT -> "$base/chat/completions"
@@ -138,6 +138,9 @@ class ProviderApiClient {
             else -> "$base/v1/messages"
         }
     }
+
+    private fun normalizedBaseUrl(baseUrl: String): String =
+        baseUrl.trim().trimEnd('/').removeSuffix("/v1")
 
     private fun validationBody(model: String, protocol: ProviderProtocol): String = when (protocol) {
         ProviderProtocol.OPENAI_RESPONSES -> JSONObject()

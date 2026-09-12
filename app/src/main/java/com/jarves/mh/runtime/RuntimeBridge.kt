@@ -33,11 +33,11 @@ object RuntimeLaunchConfigBuilder {
         when (profile.kind.protocol) {
             com.jarves.mh.model.ProviderProtocol.CLAUDE_LOGIN -> Unit
             com.jarves.mh.model.ProviderProtocol.ANTHROPIC -> {
-                environment["ANTHROPIC_BASE_URL"] = profile.baseUrl.trimEnd('/')
+                environment["ANTHROPIC_BASE_URL"] = normalizeAnthropicBaseUrl(profile.baseUrl)
                 environment["ANTHROPIC_MODEL"] = profile.model
             }
             com.jarves.mh.model.ProviderProtocol.ANTHROPIC_GATEWAY -> {
-                environment["ANTHROPIC_BASE_URL"] = profile.baseUrl.trimEnd('/')
+                environment["ANTHROPIC_BASE_URL"] = normalizeAnthropicBaseUrl(profile.baseUrl)
                 environment["ANTHROPIC_MODEL"] = profile.model
             }
             com.jarves.mh.model.ProviderProtocol.OPENROUTER -> {
@@ -82,4 +82,7 @@ object RuntimeLaunchConfigBuilder {
             environment = environment,
         )
     }
+
+    private fun normalizeAnthropicBaseUrl(baseUrl: String): String =
+        baseUrl.trim().trimEnd('/').removeSuffix("/v1")
 }
