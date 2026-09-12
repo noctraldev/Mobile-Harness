@@ -64,11 +64,14 @@ object RuntimeLaunchConfigBuilder {
             environment["CLAUDE_CODE_DISABLE_TOKEN_COUNTING"] = "1"
             environment["DISABLE_TELEMETRY"] = "1"
             if (!authToken.isNullOrBlank()) {
-                environment["ANTHROPIC_AUTH_TOKEN"] = authToken
                 if (profile.kind == com.jarves.mh.model.ProviderKind.LLM_ROUTER) {
+                    environment["ANTHROPIC_AUTH_TOKEN"] = authToken
                     environment["ANTHROPIC_API_KEY"] = ""
                     environment["OPENROUTER_API_KEY"] = authToken
                 } else {
+                    // Claude Code sends ANTHROPIC_AUTH_TOKEN as Authorization: Bearer.
+                    // Anthropic-compatible gateways such as B.AI require x-api-key,
+                    // which Claude Code emits when only ANTHROPIC_API_KEY is set.
                     environment["ANTHROPIC_API_KEY"] = authToken
                 }
             }

@@ -39,7 +39,7 @@ class RuntimeLaunchConfigBuilderTest {
         assertEquals("custom-model", config.environment["ANTHROPIC_DEFAULT_HAIKU_MODEL"])
         assertEquals("custom-model", config.environment["CLAUDE_CODE_SUBAGENT_MODEL"])
         assertEquals("1", config.environment["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"])
-        assertEquals("temporary-secret", config.environment["ANTHROPIC_AUTH_TOKEN"])
+        assertFalse(config.environment.containsKey("ANTHROPIC_AUTH_TOKEN"))
         assertEquals("temporary-secret", config.environment["ANTHROPIC_API_KEY"])
     }
 

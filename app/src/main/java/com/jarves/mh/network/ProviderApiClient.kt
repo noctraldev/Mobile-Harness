@@ -96,11 +96,7 @@ class ProviderApiClient {
                 readTimeout = readTimeoutMs
                 setRequestProperty("Accept", "application/json")
                 setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Authorization", "Bearer $apiKey")
-                if (protocol != ProviderProtocol.OPENROUTER && protocol != ProviderProtocol.OPENAI_CHAT && protocol != ProviderProtocol.OPENAI_RESPONSES) {
-                    setRequestProperty("x-api-key", apiKey)
-                    setRequestProperty("anthropic-version", "2023-06-01")
-                }
+                requestHeaders(apiKey, protocol).forEach { (name, value) -> setRequestProperty(name, value) }
                 if (body != null) doOutput = true
             }
             if (body != null) connection.outputStream.use { it.write(body.toByteArray()) }
@@ -111,6 +107,16 @@ class ProviderApiClient {
             HttpResult(code, responseBody)
         }.getOrElse { HttpResult(0, "", it.message ?: "Network connection failed",) }
     }
+
+    internal fun requestHeaders(apiKey: String, protocol: ProviderProtocol): Map<String, String> =
+        if (protocol == ProviderProtocol.OPENROUTER || protocol == ProviderProtocol.OPENAI_CHAT || protocol == ProviderProtocol.OPENAI_RESPONSES) {
+            mapOf("Authorization" to "Bearer $apiKey")
+        } else {
+            // Anthropic Messages providers, including B.AI, authenticate with
+            // x-api-key. A second Bearer credential can make a gateway reject an
+            // otherwise valid key instead of falling back to x-api-key.
+            mapOf("x-api-key" to apiKey, "anthropic-version" to "2023-06-01")
+        }
 
     private fun modelEndpoints(baseUrl: String, protocol: ProviderProtocol): List<String> {
         val base = baseUrl.trim().trimEnd('/')
