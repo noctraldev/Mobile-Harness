@@ -73,7 +73,7 @@ class ProviderApiClient {
             response.code == 404 -> ConnectionValidation.Failure("The API endpoint was not found. Check the base URL.")
             response.code == 400 && response.body.contains("model", ignoreCase = true) ->
                 ConnectionValidation.Failure("The provider did not accept model '$model'. Choose a listed model or check its exact name.")
-            response.code > 0 -> ConnectionValidation.Failure(friendlyHttpError(response.code))
+            response.code > 0 -> ConnectionValidation.Failure(providerError(response) ?: friendlyHttpError(response.code))
             response.error?.contains("timed out", ignoreCase = true) == true ->
                 ConnectionValidation.Failure("Connection timed out after 10 seconds.")
             else -> ConnectionValidation.Failure(response.error ?: "Could not connect to the provider.")
@@ -155,10 +155,20 @@ class ProviderApiClient {
             .toString()
         else -> JSONObject()
             .put("model", model)
-            .put("max_tokens", 1)
+            // B.AI rejects the tiny max_tokens=1 probe for reasoning models such
+            // as GLM-5.3-Flash. 512 is the size used in B.AI's Messages example
+            // and still keeps this one-shot validation request bounded.
+            .put("max_tokens", 512)
             .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", "Reply OK")))
             .toString()
     }
+
+    private fun providerError(response: HttpResult): String? = runCatching {
+        val root = JSONObject(response.body)
+        val error = root.optJSONObject("error")
+        error?.optString("message")?.takeIf { it.isNotBlank() }
+            ?: root.optString("message").takeIf { it.isNotBlank() }
+    }.getOrNull()
 
     private fun friendlyHttpError(code: Int): String = when (code) {
         429 -> "The provider rate limit was reached. Wait a moment and try again."
